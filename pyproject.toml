@@ -1,0 +1,58 @@
+[project]
+name = "t8client"
+version = "0.1.0"
+description = "Paquete de Python para conectarse a la API del T8, obtener datos y analizarlos."
+readme = "README.md"
+requires-python = ">=3.13"
+
+authors = [
+    { name = "Hugo Llamas", email = "llamasgarciahugo@gmail.com" },
+]
+license = { text = "MIT" }
+
+# Dependencias principales del proyecto
+dependencies = [
+    "requests",
+    "numpy",
+    "matplotlib",
+    "click",
+    "python-dotenv"
+]
+
+# -------------------------------------------------------
+# 🧪 Dependencias de desarrollo
+# (solo necesarias para testear, linting, etc.)
+# -------------------------------------------------------
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "ruff"
+]
+
+
+# -------------------------------------------------------
+# 🧹 Configuración de Ruff (linting)
+# -------------------------------------------------------
+[tool.ruff]
+line-length = 88
+lint.select = ["ANN", "Q", "E", "F", "UP", "B", "I", "Q"]
+lint.ignore = []
+lint.exclude = []
+
+# -------------------------------------------------------
+# 🧪 Configuración de Pytest (marcamos el testpath)
+# -------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# -------------------------------------------------------
+# 📦 Configuración de cómo se instala el paquete
+# (el código está dentro de src/)
+# -------------------------------------------------------
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

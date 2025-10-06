@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Datos descargados y plots
+data/waves/
+data/spectra/
+data/plots/
+data/api_data/
+
+# Archivo con credenciales
+.env
+
+# Archivos de VSCode
+.vscode/
+
+# Otros archivos generados automáticamente
+*.log
+*.sqlite3

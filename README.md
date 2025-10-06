@@ -1,0 +1,3 @@
+En este repositorio se creará un paquete de Python para conectarse a la API del T8, obtener datos y analizarlos.
+
+Aún en proceso...
