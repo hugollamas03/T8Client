@@ -1,6 +1,7 @@
-from dotenv import load_dotenv
-import os
 import sys
+
+from dotenv import load_dotenv
+
 from t8_client.api import T8ApiClient
 
 load_dotenv()  # Carga .env 
