@@ -15,7 +15,7 @@ client = T8ApiClient(
 timestamps, iso_timestamps = client.list_waves("LP_Turbine", "MAD31CY005", "AM1")
 
 print("Número de ondas:", len(timestamps))
-for e, i in zip(timestamps, iso_timestamps):
+for e, i in zip(timestamps, iso_timestamps, strict=True):
     print(f"{e} | {i}")
 
 

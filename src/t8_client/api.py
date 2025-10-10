@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import json
 import os
+from datetime import UTC, datetime
 
 import requests
-
-from datetime import datetime, timezone
 
 
 class T8ApiClient:
@@ -49,7 +49,8 @@ class T8ApiClient:
         snippet = resp.text[:1000] if resp.text else ""
         return resp.status_code, snippet
     
-    def list_waves(self, machine: str, point: str, mode: str) -> tuple[list[str], list[str]]:
+    def list_waves(self, machine: str, point: str, mode: str
+                   ) -> tuple[list[str], list[str]]:
         """
         Devuelve la lista de URLs completas de las ondas disponibles para
         una combinación específica de máquina, punto y modo de procesamiento.
@@ -94,9 +95,6 @@ class T8ApiClient:
 
                 timestamp = url_self.rstrip("/").split("/")[-1]
 
-                if timestamp == "0": # Quitamos la última
-                    continue
-
                 timestamps.append(timestamp)
 
                 iso_val = self.epoch_to_iso(timestamp)
@@ -117,8 +115,86 @@ class T8ApiClient:
         """
         try:
             epoch_int = int(epoch_str)
-            dt = datetime.fromtimestamp(epoch_int, tz=timezone.utc)
+            dt = datetime.fromtimestamp(epoch_int, tz=UTC)
             return dt.strftime("%Y-%m-%dT%H:%M:%S")
         except (ValueError, TypeError):
             return ""
+        
+    def iso_to_epoch(self, iso_str: str) -> str:
+        """
+        Convierte una fecha ISO 8601 (ej. '2019-04-10T12:08:44')
+        a un timestamp epoch (segundos desde 01-01-1970 UTC).
+
+        Parámetros:
+            iso_str (str): Fecha en formato ISO 8601.
+
+        Devuelve:
+            str: Timestamp en formato epoch (UTC).
+        """
+        try:
+            dt = datetime.fromisoformat(iso_str)
+            return str(int(dt.replace(tzinfo=UTC).timestamp()))
+        except (ValueError, TypeError):
+            return ""
+
     
+    def get_wave(
+        self,
+        machine: str,
+        point: str,
+        mode: str,
+        timestamp: str | None = None,
+    ) -> dict | None:
+        """
+        Descarga una onda específica desde la API y la guarda en 'data/waves/'.
+
+        Args:
+            machine (str): Nombre de la máquina.
+            point (str): Punto de medición.
+            mode (str): Modo de procesamiento (por ejemplo 'AM1').
+            timestamp (str): Marca de tiempo de la onda (en formato epoch).
+
+        Returns:
+            dict | None: Contenido de la onda si se descargó correctamente,
+            o None si hubo un error.
+        """
+        # Si no se especifica timestamp → última onda
+        if not timestamp:
+            timestamp = "0"
+        
+        # Se puede pasar también ISO 8601 en el timestamp
+        if "T" in timestamp or "-" in timestamp:
+            timestamp = self.iso_to_epoch(timestamp)
+
+        url = f"{self.host}/waves/{machine}/{point}/{mode}/{timestamp}"
+
+        # Petición
+        resp = requests.get(
+            url,
+            auth=self.auth,
+            headers=self.headers,
+            timeout=self.timeout,
+            verify=self.verify_ssl,
+        )
+
+        if resp.status_code != 200:
+            print(f"Error {resp.status_code}: {resp.text[:200]}")
+            return None
+        
+        wave_data = resp.json()
+
+        # Si se pidió la última onda (timestamp=0), extraer el timestamp real
+        if timestamp == "0":
+            urls, _ = self.list_waves(machine, point, mode)
+            last_real_url = urls[-2]
+            timestamp = last_real_url.rstrip("/").split("/")[-1]
+
+        # Ruta de guardado
+        save_path = f"data/waves/{machine}_{point}_{mode}_{timestamp}.json"
+
+        # Guardar el JSON en archivo
+        with open(save_path, "w", encoding="utf-8") as file:
+            json.dump(wave_data, file, ensure_ascii=False, indent=2)
+
+        print(f"Onda guardada en: {save_path}")
+        return wave_data
