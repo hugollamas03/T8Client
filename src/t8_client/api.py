@@ -238,3 +238,55 @@ class T8ApiClient:
         plt.grid(True)
         plt.tight_layout()
         plt.show()
+    def list_spectra(self, machine: str, point: str, mode: str
+                    ) -> tuple[list[str], list[str]]:
+            """
+            Devuelve la lista de URLs completas de los espectros disponibles para
+            una combinación específica de máquina, punto y modo de procesamiento.
+
+            Parámetros:
+                machine (str): Nombre de la máquina.
+                point (str): Punto de medición.
+                mode (str): Modo de procesamiento (por ejemplo, 'AM1').
+
+            Devuelve:
+                list[str]: Lista de URLs completas de cada espectro disponible.
+                Cada URL puede usarse para descargar la espectro correspondiente.
+            """
+
+            # Construimos la URL del endpoint de la API para esta máquina/punto/modo
+            url = f"{self.host}/spectra/{machine}/{point}/{mode}"
+
+            resp = requests.get(  # Hacemos la petición
+                url,
+                auth=self.auth,
+                headers=self.headers,
+                timeout=self.timeout,
+                verify=self.verify_ssl
+            )
+
+            if resp.status_code != 200: # Evitamos errores
+                print(f"Error {resp.status_code}: {resp.text[:200]}")
+                return [], []
+
+            body = resp.json()
+            
+            urls = []
+            timestamps = []
+            iso_timestamps = []
+            # Recorremos cada elemento de '_items', que representa espectro individual
+            for item in body.get("_items", []): # Si no existe se devuelve lista vacía
+                # Entramos en links y self
+                url_self = item.get("_links", {}).get("self") 
+
+                if url_self: # Si la URL tiene algún valor se añade a la lista
+                    urls.append(url_self)
+
+                    timestamp = url_self.rstrip("/").split("/")[-1]
+
+                    timestamps.append(timestamp)
+
+                    iso_val = self.epoch_to_iso(timestamp)
+                    iso_timestamps.append(iso_val)
+
+            return timestamps, iso_timestamps
