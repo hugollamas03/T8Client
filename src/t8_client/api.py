@@ -238,6 +238,7 @@ class T8ApiClient:
         plt.grid(True)
         plt.tight_layout()
         plt.show()
+
     def list_spectra(self, machine: str, point: str, mode: str
                     ) -> tuple[list[str], list[str]]:
             """
@@ -351,3 +352,41 @@ class T8ApiClient:
 
         print(f"Onda guardada en: {save_path}")
         return spectra_data
+    
+    def plot_spectra(self, file_path: str) -> None:
+            """
+        Genera un gráfico del espectro almacenado en un archivo JSON.
+
+        Parámetros:
+        file_path (str): Ruta del archivo JSON que contiene el espectro.
+        """
+
+            with open(file_path, encoding="utf-8") as f:
+                spectrum = json.load(f)
+
+            # Decodificar base64
+            compressed = base64.b64decode(spectrum["data"])
+
+            # Descomprimir con zlib
+            raw_bytes = zlib.decompress(compressed)
+
+            # Convertir a int16
+            values = np.frombuffer(raw_bytes, dtype=np.int16)
+
+            # Aplicar factor de escala
+            values = values * spectrum.get("factor", 1.0)
+
+            # Crear eje de frecuencias
+            min_freq = spectrum.get("min_freq", 0.0)
+            max_freq = spectrum.get("max_freq", 0.0)
+            freqs = np.linspace(min_freq, max_freq, len(values))
+
+            # Graficar espectro
+            plt.figure(figsize=(10, 4))
+            plt.plot(freqs, values)
+            plt.xlabel("Frecuencia (Hz)")
+            plt.ylabel("Amplitud")
+            plt.title(spectrum.get("path", "Espectro desconocido"))
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()

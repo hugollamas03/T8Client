@@ -13,5 +13,4 @@ client = T8ApiClient(
 )
 
 client = T8ApiClient()
-client.plot_wave("data/waves/LP_Turbine_MAD31CY005_AM1_1555119736.json")
-
+client.plot_spectra("data/spectra/LP_Turbine_MAD31CY005_AM1_1555119736.json")

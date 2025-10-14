@@ -12,10 +12,15 @@ client = T8ApiClient(
     password=os.getenv("T8_PASSWORD")
 )
 
-timestamps, iso_timestamps = client.list_waves("LP_Turbine", "MAD31CY005", "AM1")
+machine = "LP_Turbine"
+point = "MAD31CY005"
+mode = "AM1"
 
-print("Número de ondas:", len(timestamps))
-for e, i in zip(timestamps, iso_timestamps, strict=True):
-    print(f"{e} | {i}")
+timestamps, iso_timestamps = client.list_waves(machine, point, mode)
 
+print(f"\nOndas disponibles para {machine}/{point}/{mode}:")
+print(f"Total: {len(timestamps)}\n")
+
+for epoch, iso in zip(timestamps, iso_timestamps, strict=True):
+    print(f"{machine}/{point}/{mode}/{epoch}   |   {machine}/{point}/{mode}/{iso}")
 

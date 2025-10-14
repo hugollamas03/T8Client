@@ -10,7 +10,7 @@ client = T8ApiClient(
     password=os.getenv("T8_PASSWORD")
 )
 
-timestamp = "2019-04-10T14:48:44" #1554907724
+timestamp = "2019-04-13T01:42:16" 
 
 wave_data = client.get_wave("LP_Turbine", "MAD31CY005", "AM1", timestamp)
 
