@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
+import zlib
 from datetime import UTC, datetime
 
+import matplotlib.pyplot as plt
+import numpy as np
 import requests
 
 
@@ -198,3 +202,39 @@ class T8ApiClient:
 
         print(f"Onda guardada en: {save_path}")
         return wave_data
+    
+    def plot_wave(self, file_path: str) -> None:
+        """
+        Genera un gráfico de la onda almacenada en un archivo JSON.
+
+        Parámetros:
+            file_path (str): Ruta del archivo JSON que contiene la onda.
+        """
+        with open(file_path, encoding="utf-8") as f:
+            wave = json.load(f)
+
+        # Decodificar base64
+        compressed = base64.b64decode(wave["data"])
+
+        # Descomprimir con zlib
+        raw_bytes = zlib.decompress(compressed)
+
+        # Convertir a int16
+        signal = np.frombuffer(raw_bytes, dtype=np.int16)
+
+        # Aplicar factor de escala
+        signal = signal * wave.get("factor", 1.0)
+
+        # Crear eje temporal
+        fs = wave.get("sample_rate", 1)
+        duration = len(signal) / fs
+        time = np.linspace(0, duration, len(signal))
+
+        plt.figure(figsize=(10, 4))
+        plt.plot(time, signal)
+        plt.xlabel("Tiempo (s)")
+        plt.ylabel("Amplitud")
+        plt.title(wave.get("path", "Onda desconocida"))
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
