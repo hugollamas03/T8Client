@@ -290,3 +290,64 @@ class T8ApiClient:
                     iso_timestamps.append(iso_val)
 
             return timestamps, iso_timestamps
+    
+    def get_spectra(
+        self,
+        machine: str,
+        point: str,
+        mode: str,
+        timestamp: str | None = None,
+    ) -> dict | None:
+        """
+        Descarga un espectro específico desde la API y la guarda en 'data/spectra/'.
+
+        Args:
+            machine (str): Nombre de la máquina.
+            point (str): Punto de medición.
+            mode (str): Modo de procesamiento (por ejemplo 'AM1').
+            timestamp (str): Marca de tiempo del espectro (en formato epoch).
+
+        Returns:
+            dict | None: Contenido del espectro si se descargó correctamente,
+            o None si hubo un error.
+        """
+        # Si no se especifica timestamp → último espectro
+        if not timestamp:
+            timestamp = "0"
+        
+        # Se puede pasar también ISO 8601 en el timestamp
+        if "T" in timestamp or "-" in timestamp:
+            timestamp = self.iso_to_epoch(timestamp)
+
+        url = f"{self.host}/spectra/{machine}/{point}/{mode}/{timestamp}"
+
+        # Petición
+        resp = requests.get(
+            url,
+            auth=self.auth,
+            headers=self.headers,
+            timeout=self.timeout,
+            verify=self.verify_ssl,
+        )
+
+        if resp.status_code != 200:
+            print(f"Error {resp.status_code}: {resp.text[:200]}")
+            return None
+        
+        spectra_data = resp.json()
+
+        # Si se pidió el último espectro (timestamp=0), extraer el timestamp real
+        if timestamp == "0":
+            urls, _ = self.list_spectra(machine, point, mode)
+            last_real_url = urls[-2]
+            timestamp = last_real_url.rstrip("/").split("/")[-1]
+
+        # Ruta de guardado
+        save_path = f"data/spectra/{machine}_{point}_{mode}_{timestamp}.json"
+
+        # Guardar el JSON en archivo
+        with open(save_path, "w", encoding="utf-8") as file:
+            json.dump(spectra_data, file, ensure_ascii=False, indent=2)
+
+        print(f"Onda guardada en: {save_path}")
+        return spectra_data
