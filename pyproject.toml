@@ -56,3 +56,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# -------------------------------------------------------
+# 🚀 CLI: definición del comando "t8-client"
+# -------------------------------------------------------
+[project.scripts]
+t8-client = "t8_client.cli:cli"
