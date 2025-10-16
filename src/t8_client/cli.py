@@ -127,6 +127,60 @@ def list_waves(
         click.echo(f"Error al listar ondas: {exc}", err=True)
         raise click.ClickException("Fallo en list-waves (ver salida anterior)."
         ) from None
+    
+@cli.command("list-spectra")
+@click.option(
+    "--machine",
+    "-M",
+    required=True,
+    help="Nombre de la máquina (ej. LP_Turbine).",
+)
+@click.option(
+    "--point",
+    "-p",
+    required=True,
+    help="Punto de medida (ej. MAD31CY005).",
+)
+@click.option(
+    "--mode",
+    "-m",
+    required=True,
+    help="Modo de procesamiento (ej. AM1).",
+)
+@click.option(
+    "--iso/--epoch",
+    default=True,
+    help="Mostrar timestamps en ISO 8601 (por defecto) o epoch.",
+)
+@click.pass_context
+def list_spectra(
+    ctx: click.Context,
+    machine: str,
+    point: str,
+    mode: str,
+    iso: bool,
+) -> None:
+    """
+    Lista los espectros disponibles para (MACHINE, POINT, MODE).
+    Imprime una lista de timestamps (ISO 8601 o epoch).
+    """
+    client: T8ApiClient = ctx.obj["client"]
+
+    try:
+        timestamps, iso_timestamps = client.list_spectra(machine, point, mode)
+
+        if not timestamps:
+            click.echo("No se encontraron espectros.")
+            return
+
+        data_to_show = iso_timestamps if iso else timestamps
+        for t in data_to_show:
+            click.echo(t)
+
+    except Exception as exc:  
+        click.echo(f"Error al listar espectros: {exc}", err=True)
+        raise click.ClickException("Fallo en list-spectra (ver salida anterior)."
+        ) from None
 
 
 if __name__ == "__main__":
