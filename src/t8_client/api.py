@@ -213,6 +213,9 @@ class T8ApiClient:
         with open(file_path, encoding="utf-8") as f:
             wave = json.load(f)
 
+        base = os.path.basename(file_path)
+        name, _ = os.path.splitext(base)
+
         # Decodificar base64
         compressed = base64.b64decode(wave["data"])
 
@@ -237,6 +240,15 @@ class T8ApiClient:
         plt.title(wave.get("path", "Onda desconocida"))
         plt.grid(True)
         plt.tight_layout()
+
+        save = input("¿Quieres guardar esta figura? (s/n): ").strip().lower()
+        if save in {"s", "si", "y", "yes"}:
+            path = os.path.join("data", "plots", f"{name}_wave.png")
+            plt.savefig(path, dpi=300, bbox_inches="tight")
+            print(f"Figura guardada en {path}")
+        else:
+            print("Figura no guardada.")
+
         plt.show()
 
     def list_spectra(self, machine: str, point: str, mode: str
@@ -364,6 +376,9 @@ class T8ApiClient:
             with open(file_path, encoding="utf-8") as f:
                 spectrum = json.load(f)
 
+            base = os.path.basename(file_path)
+            name, _ = os.path.splitext(base)
+
             # Decodificar base64
             compressed = base64.b64decode(spectrum["data"])
 
@@ -389,4 +404,12 @@ class T8ApiClient:
             plt.title(spectrum.get("path", "Espectro desconocido"))
             plt.grid(True)
             plt.tight_layout()
-            plt.show()
+
+            save = input("¿Quieres guardar esta figura? (s/n): ").strip().lower()
+            if save in {"s", "si", "y", "yes"}:
+                path = os.path.join("data", "plots", f"{name}_spectrum.png")
+                plt.savefig(path, dpi=300, bbox_inches="tight")
+                print(f"Figura guardada en {path}")
+            else:
+                print("Figura no guardada.")
+                plt.show()
