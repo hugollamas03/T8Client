@@ -193,7 +193,7 @@ class T8ApiClient:
         # Si se pidió la última onda (timestamp=0), extraer el timestamp real
         if timestamp == "0":
             urls, _ = self.list_waves(machine, point, mode)
-            last_real_url = urls[-2]
+            last_real_url = urls[-1]
             timestamp = last_real_url.rstrip("/").split("/")[-1]
 
         # Ruta de guardado
@@ -358,7 +358,7 @@ class T8ApiClient:
         # Si se pidió el último espectro (timestamp=0), extraer el timestamp real
         if timestamp == "0":
             urls, _ = self.list_spectra(machine, point, mode)
-            last_real_url = urls[-2]
+            last_real_url = urls[-1]
             timestamp = last_real_url.rstrip("/").split("/")[-1]
 
         # Ruta de guardado

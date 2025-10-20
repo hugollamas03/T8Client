@@ -141,7 +141,7 @@ def list_waves(
             # Ambos (por defecto)
             click.echo(f"{'EPOCH':<15} | ISO 8601")
             click.echo("-" * 40)
-            for ts, iso_ts in zip(timestamps, iso_timestamps):
+            for ts, iso_ts in zip(timestamps, iso_timestamps, strict=True):
                 click.echo(f"{ts:<15} | {iso_ts}")
 
     except Exception as exc:  
@@ -216,7 +216,7 @@ def list_spectra(
             # Ambos (por defecto)
             click.echo(f"{'EPOCH':<15} | ISO 8601")
             click.echo("-" * 40)
-            for ts, iso_ts in zip(timestamps, iso_timestamps):
+            for ts, iso_ts in zip(timestamps, iso_timestamps, strict=True):
                 click.echo(f"{ts:<15} | {iso_ts}")
 
     except Exception as exc:  
@@ -224,6 +224,75 @@ def list_spectra(
         raise click.ClickException("Fallo en list-spectra (ver salida anterior)."
         ) from None
 
+@cli.command("get-wave")
+@click.option(
+    "--machine",
+    "-M",
+    required=True,
+    help="Nombre de la máquina (ej. LP_Turbine).",
+)
+@click.option(
+    "--point",
+    "-p",
+    required=True,
+    help="Punto de medida (ej. MAD31CY005).",
+)
+@click.option(
+    "--mode",
+    "-m",
+    required=True,
+    help="Modo de procesamiento (ej. AM1).",
+)
+@click.option(
+    "--datetime",
+    "-d",
+    "dt_iso",
+    required=False,
+    help="Fecha/hora en ISO 8601 (ej. 2019-04-11T18:25:54).",
+)
+@click.option(
+    "--timestamp",
+    "-t",
+    "ts_epoch",
+    required=False,
+    help="Timestamp en formato epoch (segundos desde 1970).",
+)
+@click.pass_context
+def get_wave(
+    ctx: click.Context,
+    machine: str,
+    point: str,
+    mode: str,
+    dt_iso: str | None,
+    ts_epoch: str | None,
+) -> None:
+    """
+    Descarga una onda del T8 y la guarda en data/waves/.
+    - Usar -d DATETIME (ISO) o -t TIMESTAMP (epoch) para seleccionar una onda concreta.
+    - Si no se especifica, se descargará la última disponible.
+    """
+    client: T8ApiClient = ctx.obj["client"]
 
+    # ---- Validación de exclusividad: -d y -t no pueden usarse a la vez ----
+    if dt_iso and ts_epoch:
+        raise click.ClickException("Especifique sólo una de las opciones "
+        "-d/--datetime o -t/--timestamp.")
+    
+    timestamp_to_use: str | None = dt_iso or ts_epoch or None
+
+    try:
+        wave_data = client.get_wave(machine=machine, point=point, mode=mode, 
+                                    timestamp=timestamp_to_use)
+        if wave_data is None:
+            raise click.ClickException("No se pudo descargar la onda "
+            "(ver salida previa).")
+        
+    except click.ClickException:
+        raise
+
+    except Exception as exc:
+        click.echo(f"Error al ejecutar get-wave: {exc}", err=True)
+        raise click.ClickException("Fallo en get-wave (ver salida anterior).") from None
+    
 if __name__ == "__main__":
     cli()
