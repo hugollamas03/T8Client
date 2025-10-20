@@ -95,8 +95,13 @@ def cli(
 )
 @click.option(
     "--iso/--epoch",
-    default=True,
-    help="Mostrar timestamps en ISO 8601 (por defecto) o epoch.",
+    default=None,
+    help=(
+        "Controla el formato de tiempo mostrado: "
+        "--iso muestra solo timestamps ISO 8601, "
+        "--epoch muestra solo timestamps epoch, "
+        "y si no se indica, se muestran ambos."
+    ),
 )
 @click.pass_context
 def list_waves(
@@ -108,7 +113,7 @@ def list_waves(
 ) -> None:
     """
     Lista las ondas disponibles para (MACHINE, POINT, MODE).
-    Imprime una lista de timestamps (ISO 8601 o epoch).
+    Imprime una lista de timestamps.
     """
     client: T8ApiClient = ctx.obj["client"]
 
@@ -119,9 +124,25 @@ def list_waves(
             click.echo("No se encontraron ondas.")
             return
 
-        data_to_show = iso_timestamps if iso else timestamps
-        for t in data_to_show:
-            click.echo(t)
+        if iso is True:
+            # Solo ISO
+            click.echo("ISO 8601")
+            click.echo("-" * 25)
+            for iso_ts in iso_timestamps:
+                click.echo(iso_ts)
+
+        elif iso is False:
+            # Solo epoch
+            click.echo("EPOCH")
+            click.echo("-" * 15)
+            for ts in timestamps:
+                click.echo(ts)
+        else:
+            # Ambos (por defecto)
+            click.echo(f"{'EPOCH':<15} | ISO 8601")
+            click.echo("-" * 40)
+            for ts, iso_ts in zip(timestamps, iso_timestamps):
+                click.echo(f"{ts:<15} | {iso_ts}")
 
     except Exception as exc:  
         click.echo(f"Error al listar ondas: {exc}", err=True)
@@ -149,8 +170,13 @@ def list_waves(
 )
 @click.option(
     "--iso/--epoch",
-    default=True,
-    help="Mostrar timestamps en ISO 8601 (por defecto) o epoch.",
+    default=None,
+       help=(
+        "Controla el formato de tiempo mostrado: "
+        "--iso muestra solo timestamps ISO 8601, "
+        "--epoch muestra solo timestamps epoch, "
+        "y si no se indica, se muestran ambos."
+    ),
 )
 @click.pass_context
 def list_spectra(
@@ -162,7 +188,7 @@ def list_spectra(
 ) -> None:
     """
     Lista los espectros disponibles para (MACHINE, POINT, MODE).
-    Imprime una lista de timestamps (ISO 8601 o epoch).
+    Imprime una lista de timestamps.
     """
     client: T8ApiClient = ctx.obj["client"]
 
@@ -173,9 +199,25 @@ def list_spectra(
             click.echo("No se encontraron espectros.")
             return
 
-        data_to_show = iso_timestamps if iso else timestamps
-        for t in data_to_show:
-            click.echo(t)
+        if iso is True:
+            # Solo ISO
+            click.echo("ISO 8601")
+            click.echo("-" * 25)
+            for iso_ts in iso_timestamps:
+                click.echo(iso_ts)
+
+        elif iso is False:
+            # Solo epoch
+            click.echo("EPOCH")
+            click.echo("-" * 15)
+            for ts in timestamps:
+                click.echo(ts)
+        else:
+            # Ambos (por defecto)
+            click.echo(f"{'EPOCH':<15} | ISO 8601")
+            click.echo("-" * 40)
+            for ts, iso_ts in zip(timestamps, iso_timestamps):
+                click.echo(f"{ts:<15} | {iso_ts}")
 
     except Exception as exc:  
         click.echo(f"Error al listar espectros: {exc}", err=True)

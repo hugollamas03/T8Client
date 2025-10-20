@@ -99,6 +99,9 @@ class T8ApiClient:
 
                 timestamp = url_self.rstrip("/").split("/")[-1]
 
+                if timestamp == "0":
+                    continue
+
                 timestamps.append(timestamp)
 
                 iso_val = self.epoch_to_iso(timestamp)
@@ -296,6 +299,9 @@ class T8ApiClient:
                     urls.append(url_self)
 
                     timestamp = url_self.rstrip("/").split("/")[-1]
+
+                    if timestamp == "0":
+                        continue
 
                     timestamps.append(timestamp)
 
