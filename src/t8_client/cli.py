@@ -294,7 +294,7 @@ def get_wave(
         click.echo(f"Error al ejecutar get-wave: {exc}", err=True)
         raise click.ClickException("Fallo en get-wave (ver salida anterior).") from None
     
-@cli.command("get-spectra")
+@cli.command("get-spectrum")
 @click.option(
     "--machine",
     "-M",
@@ -328,7 +328,7 @@ def get_wave(
     help="Timestamp en formato epoch (segundos desde 1970).",
 )
 @click.pass_context
-def get_spectra(
+def get_spectrum(
     ctx: click.Context,
     machine: str,
     point: str,
@@ -351,7 +351,7 @@ def get_spectra(
     timestamp_to_use: str | None = dt_iso or ts_epoch or None
 
     try:
-        wave_data = client.get_spectra(machine=machine, point=point, mode=mode, 
+        wave_data = client.get_spectrum(machine=machine, point=point, mode=mode, 
                                     timestamp=timestamp_to_use)
         if wave_data is None:
             raise click.ClickException("No se pudo descargar el espectro"
@@ -444,6 +444,88 @@ def plot_wave(
         raise click.ClickException(
             "Fallo en plot-wave (ver salida anterior)."
         ) from None
+    
+@cli.command("plot-spectrum")
+@click.option(
+    "--machine",
+    "-M",
+    required=True,
+    help="Nombre de la máquina (ej. LP_Turbine).",
+)
+@click.option(
+    "--point",
+    "-p",
+    required=True,
+    help="Punto de medida (ej. MAD31CY005).",
+)
+@click.option(
+    "--mode",
+    "-m",
+    required=True,
+    help="Modo de procesamiento (ej. AM1).",
+)
+@click.option(
+    "--datetime",
+    "-d",
+    "dt_iso",
+    required=False,
+    help="Fecha/hora en ISO 8601 (ej. 2019-04-11T18:25:54).",
+)
+@click.option(
+    "--timestamp",
+    "-t",
+    "ts_epoch",
+    required=False,
+    help="Timestamp en formato epoch (segundos desde 1970).",
+)
+@click.pass_context
+def plot_spectrum(
+    ctx: click.Context,
+    machine: str,
+    point: str,
+    mode: str,
+    dt_iso: str | None,
+    ts_epoch: str | None,
+) -> None:
+    """
+    Representa y/o guarda un espectro previamente descargado.
+
+    - Usar -d DATETIME (ISO) o -t TIMESTAMP (epoch) para seleccionar una onda.
+    - Si no se especifica, se usará la última disponible.
+    """
+    client: T8ApiClient = ctx.obj["client"]
+
+    if dt_iso and ts_epoch:
+        raise click.ClickException(
+            "Especifique solo una de las opciones -d/--datetime o -t/--timestamp."
+        )
+
+    if dt_iso:
+        ts_epoch = str(client.iso_to_epoch(dt_iso))
+
+    if not (dt_iso or ts_epoch):
+        urls, _ = client.list_spectra(machine, point, mode)
+        if not urls:
+            raise click.ClickException("No hay espectros disponibles.")
+        last_ts = urls[-1].rstrip("/").split("/")[-1]
+        ts_epoch = last_ts
+
+    timestamp_to_use = ts_epoch or "0"
+    file_path = f"data/spectra/{machine}_{point}_{mode}_{timestamp_to_use}.json"
+
+    if not os.path.exists(file_path):
+        raise click.ClickException(f"No se encontró el archivo: {file_path}")
+
+    try:
+        click.echo(f"Graficando espectro desde {file_path}...")
+        client.plot_spectrum(file_path)
+
+    except Exception as exc:
+        click.echo(f"Error al ejecutar plot-spectrum: {exc}", err=True)
+        raise click.ClickException(
+            "Fallo en plot-spectrum (ver salida anterior)."
+        ) from None
+
 
 if __name__ == "__main__":
     cli()

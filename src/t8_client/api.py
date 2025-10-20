@@ -310,7 +310,7 @@ class T8ApiClient:
 
             return timestamps, iso_timestamps
     
-    def get_spectra(
+    def get_spectrum(
         self,
         machine: str,
         point: str,
@@ -371,7 +371,7 @@ class T8ApiClient:
         print(f"Onda guardada en: {save_path}")
         return spectra_data
     
-    def plot_spectra(self, file_path: str) -> None:
+    def plot_spectrum(self, file_path: str) -> None:
             """
         Genera un gráfico del espectro almacenado en un archivo JSON.
 
