@@ -412,4 +412,4 @@ class T8ApiClient:
                 print(f"Figura guardada en {path}")
             else:
                 print("Figura no guardada.")
-                plt.show()
+            plt.show()
