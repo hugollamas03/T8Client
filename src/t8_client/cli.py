@@ -17,17 +17,17 @@ CONTEXT_SETTINGS: dict[str, Any] = {"help_option_names": ["-h", "--help"]}
 @click.option(
     "--host",
     envvar="T8_HOST",
-    help="URL base del T8 (también desde T8_HOST).",
+    help="URL base de la API del T8.",
 )
 @click.option(
     "--user",
     envvar="T8_USER",
-    help="Usuario T8 (también desde T8_USER).",
+    help="Usuario de la API del T8",
 )
 @click.option(
     "--password",
     envvar="T8_PASSWORD",
-    help="Password T8 (también desde T8_PASSWORD).",
+    help="Contraseña de la API del T8",
 )
 @click.option(
     "--timeout",
@@ -51,7 +51,7 @@ def cli(
     no_verify_ssl: bool,
 ) -> None:
     """
-    t8-client: CLI para interactuar con el T8.
+    t8-client: CLI para interactuar con la API del T8.
     Las credenciales pueden provenir de variables de entorno o de .env.
     """
     host = host or os.getenv("T8_HOST")
@@ -338,7 +338,8 @@ def get_spectrum(
 ) -> None:
     """
     Descarga un espectro del T8 y la guarda en data/spectra/.
-    - Usar -d DATETIME (ISO) o -t TIMESTAMP (epoch) para seleccionar un espectro concreto.
+    - Usar -d DATETIME (ISO) o -t TIMESTAMP (epoch) para seleccionar
+      un espectro concreto.
     - Si no se especifica, se descargará el último disponible.
     """
     client: T8ApiClient = ctx.obj["client"]
@@ -362,7 +363,8 @@ def get_spectrum(
 
     except Exception as exc:
         click.echo(f"Error al ejecutar get-spectra: {exc}", err=True)
-        raise click.ClickException("Fallo en get-spectra (ver salida anterior).") from None
+        raise click.ClickException("Fallo en get-spectra (ver salida anterior" \
+        ").") from None
     
 @cli.command("plot-wave")
 @click.option(
