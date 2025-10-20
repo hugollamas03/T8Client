@@ -246,7 +246,7 @@ class T8ApiClient:
 
         save = input("¿Quieres guardar esta figura? (s/n): ").strip().lower()
         if save in {"s", "si", "y", "yes"}:
-            path = os.path.join("data", "plots", f"{name}_wave.png")
+            path = os.path.join("data", "plots", "waves", f"{name}_wave.png")
             plt.savefig(path, dpi=300, bbox_inches="tight")
             print(f"Figura guardada en {path}")
         else:
@@ -413,7 +413,7 @@ class T8ApiClient:
 
             save = input("¿Quieres guardar esta figura? (s/n): ").strip().lower()
             if save in {"s", "si", "y", "yes"}:
-                path = os.path.join("data", "plots", f"{name}_spectrum.png")
+                path = os.path.join("data", "plots", "spectra", f"{name}_spectrum.png")
                 plt.savefig(path, dpi=300, bbox_inches="tight")
                 print(f"Figura guardada en {path}")
             else:
