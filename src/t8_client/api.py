@@ -8,6 +8,9 @@ from datetime import UTC, datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.fft import fft, fftfreq
+import math
+from pathlib import Path
 import requests
 
 
@@ -419,3 +422,78 @@ class T8ApiClient:
             else:
                 print("Figura no guardada.")
             plt.show()
+
+
+    def zero_padding(self, waveform: np.ndarray):
+        """
+        Pad a la onda dada con ceros a la siguiente potencia de 2.
+        """
+        n = len(waveform)
+        padded_length = 2 ** np.ceil(np.log2(n)).astype(int)
+        return np.pad(waveform, (0, padded_length - n), "constant")
+
+    def preprocess_waveform(self, waveform: np.ndarray):
+        """
+        Preprocesa la onda dada aplicando Hanning y zero padding.
+        """
+        windowed_waveform = waveform * np.hanning(len(waveform))
+        return self.zero_padding(windowed_waveform)
+
+    def compute_spectrum(self, wave_file: str, fmin: float, fmax: float):
+        """
+        Computa el espectro de una onda previamente descargada
+        mediante zero-padding, hanning y FFT.
+        """
+        # Cargar el archivo de onda descargado
+        with open(wave_file, "r") as f:
+            wave = json.load(f)
+
+        # Decodificar la señal comprimida base64+zlib
+        raw = zlib.decompress(base64.b64decode(wave["data"]))
+        signal = np.frombuffer(raw, dtype=np.int16).astype(float)
+
+        # Multiplicar por el factor de conversión
+        factor = wave.get("factor", 1.0)
+        signal_proc = signal * factor
+        signal_proc -= np.mean(signal_proc)
+        print(signal_proc)
+
+        # Preprocesar la señal (ventana Hanning + zero-padding)
+        signal_preprocessed = self.preprocess_waveform(signal_proc)
+        print(signal_preprocessed)
+
+        # Calcular el espectro FFT
+        sample_rate = wave.get("sample_rate", 1.0)
+        spectrum = fft(signal_preprocessed) * 2 * np.sqrt(2)
+        magnitude = np.abs(spectrum) / len(spectrum)
+        freqs = fftfreq(len(signal_preprocessed), 1 / sample_rate)
+
+        # Filtrar por fmin y fmax
+        mask = (freqs >= fmin) & (freqs <= fmax)
+        filtered_freqs = freqs[mask]
+        filtered_spectrum = magnitude[mask]
+
+        # Guardar resultado en data/spectra
+        out_path = Path(wave_file)
+        spectra_dir = Path("data/spectra")
+        spectra_dir.mkdir(parents=True, exist_ok=True)
+        out_file = spectra_dir / (out_path.stem + "_computed.json")
+
+        result = {
+            "freqs": filtered_freqs.tolist(),
+            "spectrum": filtered_spectrum.tolist(),
+            "meta": {
+                "sample_rate": sample_rate,
+                "fmin": fmin,
+                "fmax": fmax,
+                "n_original": len(signal),
+                "n_fft": len(signal_preprocessed),
+                "factor": factor,
+            },
+        }
+
+        with open(out_file, "w") as f:
+            json.dump(result, f, indent=2)
+
+        print(f"✅ Espectro calculado guardado en {out_file}")
+        return out_file

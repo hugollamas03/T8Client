@@ -528,6 +528,15 @@ def plot_spectrum(
             "Fallo en plot-spectrum (ver salida anterior)."
         ) from None
 
+@cli.command("compute-spectrum")
+@click.option("-w", "--wave-file", required=True, type=click.Path(exists=True), help="Archivo de onda descargado (.json)")
+@click.option("--fmin", required=True, type=float, help="Frecuencia mínima de interés (Hz)")
+@click.option("--fmax", required=True, type=float, help="Frecuencia máxima de interés (Hz)")
+def compute_spectrum_cmd(wave_file, fmin, fmax):
+    """Calcula el espectro de una onda dada."""
+    client = T8ApiClient()
+    client.compute_spectrum(wave_file, fmin, fmax)
+
 
 if __name__ == "__main__":
     cli()
